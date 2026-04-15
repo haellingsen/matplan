@@ -3,7 +3,8 @@
     "name": "startbootstrap-bare",
     "version": "4.2.3",
     "scripts": {
-        "start": "node_modules/.bin/gulp watch"
+        "start": "node server.js",
+        "build": "node_modules/.bin/gulp build"
     },
     "description": "A basic HTML starter template for Bootstrap",
     "keywords": [
@@ -30,12 +31,13 @@
     },
     "dependencies": {
         "bootstrap": "4.5.3",
+        "express": "^4.22.1",
         "jquery": "3.5.1"
     },
     "devDependencies": {
-        "browser-sync": "2.26.13",
+        "browser-sync": "^3.0.4",
         "del": "6.0.0",
-        "gulp": "4.0.2",
+        "gulp": "^5.0.1",
         "merge-stream": "2.0.0"
     }
 }

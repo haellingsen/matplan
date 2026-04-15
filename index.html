@@ -1,63 +1,814 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="no">
 <head>
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="">
-  <meta name="author" content="">
-
   <title>Matplan</title>
-
-  <!-- Bootstrap core CSS -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
   <script src="matplan.js"></script>
+  <style>
+    :root {
+      --cream: #F6F1E9;
+      --white: #FDFCF9;
+      --green: #1D3A27;
+      --green-mid: #2A5239;
+      --terracotta: #B84F35;
+      --gold: #C4903A;
+      --text: #1A1A17;
+      --muted: #8C8579;
+      --border: #DED7CB;
+      --chip-bg: #EDE8E0;
+      --drawer-w: 440px;
+    }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
 
+    /* ─── HEADER ─── */
+    .app-header {
+      background: var(--green);
+      padding: 2.75rem 2.5rem 3.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .app-header::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      border: 60px solid rgba(255,255,255,0.03);
+    }
+    .app-header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 48px;
+      background: var(--cream);
+      clip-path: ellipse(52% 100% at 50% 100%);
+    }
+    .header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    .app-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 700;
+      line-height: 0.9;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+    .app-title em { font-style: italic; color: var(--gold); }
+    .app-subtitle {
+      margin-top: 0.6rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8rem;
+      font-weight: 300;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    .btn-generate {
+      background: var(--terracotta);
+      color: #fff;
+      border: none;
+      padding: 1rem 2.75rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-generate:hover {
+      background: #9E3E27;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(184,79,53,0.4);
+    }
+    .btn-generate:active { transform: translateY(0); box-shadow: none; }
+    .btn-manage {
+      background: transparent;
+      color: rgba(255,255,255,0.75);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 1rem 1.75rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-manage:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.5);
+      color: #fff;
+    }
+
+    /* ─── WEEK GRID ─── */
+    .week-wrapper {
+      padding: 2rem 2rem 3rem;
+      overflow-x: auto;
+    }
+    .week-wrapper::-webkit-scrollbar { height: 3px; }
+    .week-wrapper::-webkit-scrollbar-track { background: var(--border); }
+    .week-wrapper::-webkit-scrollbar-thumb { background: var(--green); }
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(200px, 1fr));
+      gap: 0.875rem;
+    }
+
+    /* ─── DAY CARD ─── */
+    .day-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .day-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(29,58,39,0.1); }
+    .day-header { background: var(--green); color: #fff; padding: 0.9rem 1rem 0.75rem; }
+    .day-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem; font-weight: 700; line-height: 1; display: block;
+    }
+    .ingredients-section { padding: 0.9rem; border-bottom: 1px solid var(--border); }
+    .section-label {
+      font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.55rem; font-weight: 500;
+    }
+    .chips-wrap { display: flex; flex-wrap: wrap; gap: 0.28rem; }
+    .chip { display: inline-flex; align-items: center; cursor: pointer; user-select: none; }
+    .chip input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    .chip-inner {
+      display: inline-block; padding: 0.22rem 0.55rem;
+      font-size: 0.7rem; border: 1px solid var(--border);
+      color: var(--muted); background: transparent;
+      transition: all 0.15s; line-height: 1.4;
+    }
+    .chip:hover .chip-inner { border-color: var(--green-mid); color: var(--green); }
+    .chip input:checked ~ .chip-inner { background: var(--green); border-color: var(--green); color: #fff; }
+
+    /* ─── RESULT ─── */
+    .result-section {
+      padding: 1rem; flex: 1; min-height: 130px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .result-placeholder { text-align: center; }
+    .placeholder-dot {
+      width: 28px; height: 28px; border: 1.5px dashed var(--border);
+      border-radius: 50%; margin: 0 auto 0.5rem;
+    }
+    .placeholder-text { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--border); }
+    .meal-result { width: 100%; opacity: 0; transform: translateY(10px); transition: opacity 0.35s, transform 0.35s; }
+    .meal-result.show { opacity: 1; transform: translateY(0); }
+    .meal-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 700; color: var(--green);
+      line-height: 1.15; margin-bottom: 0.35rem; text-transform: capitalize;
+    }
+    .meal-meta {
+      display: flex; align-items: center; gap: 0.3rem;
+      font-size: 0.67rem; color: var(--terracotta);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.65rem;
+    }
+    .meal-meta-dot { width: 3px; height: 3px; background: var(--terracotta); border-radius: 50%; }
+    .meal-tags { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+    .meal-tag { font-size: 0.65rem; padding: 0.15rem 0.42rem; background: var(--chip-bg); color: var(--muted); border: 1px solid transparent; }
+    .meal-tag.matched { background: rgba(29,58,39,0.07); border-color: rgba(29,58,39,0.25); color: var(--green); }
+    .no-match-msg { text-align: center; width: 100%; }
+    .no-match-icon { font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--terracotta); }
+    .no-match-text { font-size: 0.72rem; color: var(--terracotta); font-style: italic; line-height: 1.5; }
+
+    /* ─── DRAWER OVERLAY ─── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,20,14,0.45);
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ─── DRAWER ─── */
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: var(--drawer-w);
+      max-width: 100vw;
+      background: var(--white);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -8px 0 40px rgba(10,20,14,0.18);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      background: var(--green);
+      color: #fff;
+      padding: 1.5rem 1.5rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .drawer-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem; font-weight: 700;
+    }
+    .drawer-close {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 1.5rem; cursor: pointer; line-height: 1;
+      padding: 0.2rem 0.4rem;
+      transition: color 0.15s;
+    }
+    .drawer-close:hover { color: #fff; }
+
+    /* ─── DRAWER TABS ─── */
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1; padding: 0.85rem;
+      background: none; border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    /* ─── DRAWER BODY ─── */
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .drawer-body::-webkit-scrollbar { width: 3px; }
+    .drawer-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .tab-pane { display: none; padding: 1.5rem; }
+    .tab-pane.active { display: block; }
+
+    /* ─── FORM ELEMENTS ─── */
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label {
+      display: block; margin-bottom: 0.35rem;
+      font-size: 0.65rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); font-weight: 500;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--green); background: #fff; }
+    .form-input::placeholder { color: var(--border); }
+
+    .new-ing-row { display: flex; gap: 0.5rem; }
+    .new-ing-row .form-input { flex: 1; }
+    .btn-add-ing {
+      padding: 0.65rem 1rem;
+      background: var(--green);
+      color: #fff; border: none;
+      font-size: 1.1rem; line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-add-ing:hover { background: var(--green-mid); }
+
+    /* New ingredient chips (removable) */
+    .new-ings-list { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; min-height: 0; }
+    .new-ing-chip {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.22rem 0.45rem 0.22rem 0.6rem;
+      background: var(--green); color: #fff;
+      font-size: 0.7rem; border: none;
+    }
+    .new-ing-chip button {
+      background: none; border: none; color: rgba(255,255,255,0.7);
+      font-size: 0.85rem; line-height: 1; cursor: pointer; padding: 0;
+    }
+    .new-ing-chip button:hover { color: #fff; }
+
+    /* Submit buttons */
+    .btn-primary-action {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--terracotta);
+      color: #fff; border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 1.25rem;
+    }
+    .btn-primary-action:hover { background: #9E3E27; }
+
+    /* Feedback message */
+    .feedback {
+      padding: 0.65rem 0.85rem;
+      font-size: 0.78rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+    .feedback.success { background: rgba(29,58,39,0.08); color: var(--green); border-left: 3px solid var(--green); }
+    .feedback.error { background: rgba(184,79,53,0.08); color: var(--terracotta); border-left: 3px solid var(--terracotta); }
+    .feedback.show { display: block; }
+
+    /* ─── JSON TAB ─── */
+    .json-example {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      padding: 0.85rem;
+      font-size: 0.7rem;
+      line-height: 1.6;
+      color: var(--muted);
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      white-space: pre;
+    }
+    .json-example strong { color: var(--green); }
+    .json-textarea {
+      width: 100%;
+      height: 180px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .json-textarea:focus { border-color: var(--green); background: #fff; }
+
+    /* ─── DISH LIST ─── */
+    .dish-list-section {
+      padding: 0 1.5rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .dish-list-header {
+      padding: 1.1rem 0 0.75rem;
+      font-size: 0.62rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); font-weight: 500;
+    }
+    .dish-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .dish-item {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: var(--white);
+    }
+    .dish-item-body { flex: 1; min-width: 0; }
+    .dish-item-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--green); text-transform: capitalize;
+      display: flex; align-items: center; gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+    .badge-builtin {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
+      background: var(--chip-bg); color: var(--muted);
+      padding: 0.1rem 0.35rem; border: 1px solid var(--border);
+      font-weight: 400; vertical-align: middle;
+    }
+    .badge-custom {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
+      background: rgba(29,58,39,0.08); color: var(--green);
+      padding: 0.1rem 0.35rem; border: 1px solid rgba(29,58,39,0.2);
+      font-weight: 400; vertical-align: middle;
+    }
+    .dish-item-meta { font-size: 0.67rem; color: var(--muted); margin-bottom: 0.35rem; }
+    .dish-item-ings { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+    .dish-ing-tag {
+      font-size: 0.63rem; padding: 0.1rem 0.35rem;
+      background: var(--chip-bg); color: var(--muted);
+    }
+    .btn-delete {
+      background: none; border: none;
+      color: var(--border); font-size: 1rem;
+      cursor: pointer; padding: 0.1rem;
+      line-height: 1; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .btn-delete:hover { color: var(--terracotta); }
+  </style>
 </head>
-
 <body>
 
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
-    <div class="container">
-      <a class="navbar-brand" href="#">Matplan</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarResponsive">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="#">Hjem
-              <span class="sr-only">(current)</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Om</a>
-          </li>
-        </ul>
-      </div>
+<!-- ─── HEADER ─── -->
+<header class="app-header">
+  <div class="header-inner">
+    <div>
+      <h1 class="app-title">Mat<em>plan</em></h1>
+      <p class="app-subtitle">Velg ingredienser per dag · appen finner retten</p>
     </div>
-  </nav>
-
-  <!-- Page Content -->
-  <div class="container">
-    <div class="row">
-      <div class="col" id="day1"></div>
-      <div class="col" id="day2"></div>
-      <div class="col" id="day3"></div>
-      <div class="col" id="day4"></div>
-      <div class="col" id="day5"></div>
-      <div class="col" id="day6"></div>
-      <div class="col" id="day7"></div>
+    <div class="header-actions">
+      <button class="btn-manage" onclick="openDrawer()">+ Administrer retter</button>
+      <button class="btn-generate" onclick="generatePlan()">Generer matplan</button>
     </div>
   </div>
+</header>
 
-  <!-- Bootstrap core JavaScript -->
-  <script src="vendor/jquery/jquery.slim.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- ─── WEEK GRID ─── -->
+<div class="week-wrapper">
+  <div class="week-grid" id="weekGrid"></div>
+</div>
 
+<!-- ─── DRAWER OVERLAY ─── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- ─── DRAWER ─── -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">Administrer retter</span>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+
+  <div class="drawer-tabs">
+    <button class="tab-btn active" onclick="switchTab('form', this)">Skjema</button>
+    <button class="tab-btn" onclick="switchTab('json', this)">JSON</button>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- FORM TAB -->
+    <div class="tab-pane active" id="tab-form">
+      <form id="addDishForm" onsubmit="handleFormSubmit(event)">
+
+        <div class="form-group">
+          <label>Navn på rett</label>
+          <input class="form-input" id="dishName" type="text" placeholder="f.eks. pasta carbonara" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label>Koketid (timer)</label>
+          <input class="form-input" id="dishKoketid" type="number" min="1" max="24" value="1">
+        </div>
+
+        <div class="form-group">
+          <label>Eksisterende ingredienser</label>
+          <div class="chips-wrap" id="formIngChips"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Ny ingrediens</label>
+          <div class="new-ing-row">
+            <input class="form-input" id="newIngInput" type="text"
+              placeholder="Skriv ny ingrediens og trykk +"
+              autocomplete="off"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addNewIng();}">
+            <button type="button" class="btn-add-ing" onclick="addNewIng()">+</button>
+          </div>
+          <div class="new-ings-list" id="newIngsList"></div>
+        </div>
+
+        <div class="feedback" id="formFeedback"></div>
+        <button type="submit" class="btn-primary-action">Lagre rett</button>
+      </form>
+    </div>
+
+    <!-- JSON TAB -->
+    <div class="tab-pane" id="tab-json">
+      <pre class="json-example">{
+  "pasta carbonara": {
+    "ingredienser": ["pasta", "egg", "bacon", "parmesan"],
+    "koketid": [1]
+  },
+  "laksepasta": {
+    "ingredienser": ["pasta", "laks", "fløte", "løk"],
+    "koketid": [1]
+  }
+}</pre>
+      <div class="form-group">
+        <label>Lim inn JSON</label>
+        <textarea class="json-textarea" id="jsonInput" placeholder='{ "rettnavn": { "ingredienser": [...], "koketid": [N] } }'></textarea>
+      </div>
+      <div class="feedback" id="jsonFeedback"></div>
+      <button type="button" class="btn-primary-action" onclick="handleJSONImport()">Importer retter</button>
+    </div>
+
+    <!-- DISH LIST -->
+    <div class="dish-list-section">
+      <div class="dish-list-header">Alle retter (<span id="dishCount">0</span>)</div>
+      <div class="dish-list" id="dishList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="vendor/jquery/jquery.slim.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+  const DAYS = ['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+  let drawerChanged = false;
+  let newIngredients = [];
+
+  /* ─── WEEK GRID ─── */
+  function buildUI() {
+    const allIngredients = getAllIngredients();
+    const grid = document.getElementById('weekGrid');
+    grid.innerHTML = '';
+
+    DAYS.forEach((day, idx) => {
+      const card = document.createElement('div');
+      card.className = 'day-card';
+
+      const chips = allIngredients.map(ing => `
+        <label class="chip">
+          <input type="checkbox" class="ing-check" data-day="${idx}" value="${escHtml(ing)}">
+          <span class="chip-inner">${escHtml(ing)}</span>
+        </label>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="day-header">
+          <span class="day-name">${day}</span>
+        </div>
+        <div class="ingredients-section">
+          <div class="section-label">Filtrer etter ingrediens</div>
+          <div class="chips-wrap">${chips}</div>
+        </div>
+        <div class="result-section" id="result-${idx}">
+          <div class="result-placeholder">
+            <div class="placeholder-dot"></div>
+            <div class="placeholder-text">Generer plan</div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function generatePlan() {
+    DAYS.forEach((_, idx) => {
+      const selected = [...document.querySelectorAll(`.ing-check[data-day="${idx}"]:checked`)]
+        .map(cb => cb.value);
+      renderResult(idx, pickMeal(selected), selected);
+    });
+  }
+
+  function renderResult(dayIdx, meal, selectedIngredients) {
+    const container = document.getElementById(`result-${dayIdx}`);
+    if (!meal) {
+      container.innerHTML = `<div class="no-match-msg">
+        <div class="no-match-icon">∅</div>
+        <div class="no-match-text">Ingen rett passer.<br>Prøv færre ingredienser.</div>
+      </div>`;
+      return;
+    }
+    const hours = meal.koketid[0];
+    const tags = meal.ingredienser.map(ing => {
+      const matched = selectedIngredients.includes(ing);
+      return `<span class="meal-tag${matched ? ' matched' : ''}">${escHtml(ing)}</span>`;
+    }).join('');
+    container.innerHTML = `
+      <div class="meal-result" id="meal-anim-${dayIdx}">
+        <div class="meal-name">${escHtml(meal.name)}</div>
+        <div class="meal-meta"><span class="meal-meta-dot"></span><span>${hours} ${hours === 1 ? 'time' : 'timer'}</span></div>
+        <div class="meal-tags">${tags}</div>
+      </div>`;
+    setTimeout(() => {
+      const el = document.getElementById(`meal-anim-${dayIdx}`);
+      if (el) el.classList.add('show');
+    }, dayIdx * 55);
+  }
+
+  /* ─── DRAWER ─── */
+  function openDrawer() {
+    drawerChanged = false;
+    buildFormIngChips();
+    buildDishList();
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    if (drawerChanged) buildUI();
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${name}`).classList.add('active');
+  }
+
+  /* ─── FORM ─── */
+  function buildFormIngChips() {
+    const container = document.getElementById('formIngChips');
+    const ings = getAllIngredients();
+    if (!ings.length) { container.innerHTML = '<span style="font-size:0.72rem;color:var(--muted)">Ingen ingredienser ennå.</span>'; return; }
+    container.innerHTML = ings.map(ing => `
+      <label class="chip">
+        <input type="checkbox" class="form-ing-check" value="${escHtml(ing)}">
+        <span class="chip-inner">${escHtml(ing)}</span>
+      </label>
+    `).join('');
+  }
+
+  function addNewIng() {
+    const input = document.getElementById('newIngInput');
+    const val = input.value.trim().toLowerCase();
+    if (!val) return;
+    if (newIngredients.includes(val)) { input.value = ''; return; }
+    // Also check existing ingredients
+    const existing = getAllIngredients();
+    if (existing.includes(val)) {
+      // check the existing chip instead
+      const existingChip = [...document.querySelectorAll('.form-ing-check')]
+        .find(cb => cb.value === val);
+      if (existingChip) existingChip.checked = true;
+      input.value = '';
+      return;
+    }
+    newIngredients.push(val);
+    renderNewIngsList();
+    input.value = '';
+    input.focus();
+  }
+
+  function removeNewIng(ing) {
+    newIngredients = newIngredients.filter(i => i !== ing);
+    renderNewIngsList();
+  }
+
+  function renderNewIngsList() {
+    const list = document.getElementById('newIngsList');
+    list.innerHTML = newIngredients.map(ing => `
+      <span class="new-ing-chip">
+        ${escHtml(ing)}
+        <button type="button" onclick="removeNewIng('${escHtml(ing)}')" title="Fjern">×</button>
+      </span>
+    `).join('');
+  }
+
+  async function handleFormSubmit(e) {
+    e.preventDefault();
+    const name    = document.getElementById('dishName').value;
+    const koketid = document.getElementById('dishKoketid').value;
+    const checked = [...document.querySelectorAll('.form-ing-check:checked')].map(cb => cb.value);
+    const allSelected = [...new Set([...checked, ...newIngredients])];
+    const feedback = document.getElementById('formFeedback');
+
+    let result;
+    try { result = await addDish(name, allSelected, koketid); }
+    catch { showFeedback(feedback, 'Serverfeil – kunne ikke lagre.', true); return; }
+
+    if (!result.ok) { showFeedback(feedback, result.error, true); return; }
+
+    showFeedback(feedback, `"${result.name}" ble lagret.`, false);
+    document.getElementById('addDishForm').reset();
+    document.getElementById('dishKoketid').value = 1;
+    newIngredients = [];
+    renderNewIngsList();
+    drawerChanged = true;
+    buildFormIngChips();
+    buildDishList();
+  }
+
+  /* ─── JSON IMPORT ─── */
+  async function handleJSONImport() {
+    const json     = document.getElementById('jsonInput').value.trim();
+    const feedback = document.getElementById('jsonFeedback');
+    if (!json) { showFeedback(feedback, 'Lim inn JSON først.', true); return; }
+
+    let result;
+    try { result = await importFromJSON(json); }
+    catch { showFeedback(feedback, 'Serverfeil – kunne ikke lagre.', true); return; }
+
+    if (!result.ok) { showFeedback(feedback, result.error, true); return; }
+
+    let msg = '';
+    if (result.added.length)   msg += `Lagret: ${result.added.join(', ')}. `;
+    if (result.skipped.length) msg += `Hoppet over: ${result.skipped.join(', ')}.`;
+    if (!result.added.length && !result.skipped.length) msg = 'Ingen retter i JSON-en.';
+
+    showFeedback(feedback, msg, result.added.length === 0);
+    if (result.added.length) {
+      document.getElementById('jsonInput').value = '';
+      drawerChanged = true;
+      buildFormIngChips();
+      buildDishList();
+    }
+  }
+
+  /* ─── DISH LIST ─── */
+  function buildDishList() {
+    const food  = getAllFood();
+    const names = Object.keys(food).sort((a, b) => a.localeCompare(b, 'no'));
+    document.getElementById('dishCount').textContent = names.length;
+
+    document.getElementById('dishList').innerHTML = names.map(name => {
+      const dish    = food[name];
+      const builtin = isBuiltin(name);
+      const hours   = dish.koketid[0];
+      const ings    = dish.ingredienser.map(i => `<span class="dish-ing-tag">${escHtml(i)}</span>`).join('');
+      const deleteBtn = builtin ? '' :
+        `<button class="btn-delete" onclick="handleDelete('${escHtml(name)}')" title="Slett">×</button>`;
+      const badge = builtin
+        ? `<span class="badge-builtin">innebygd</span>`
+        : `<span class="badge-custom">egendefinert</span>`;
+      return `
+        <div class="dish-item">
+          <div class="dish-item-body">
+            <div class="dish-item-name">${escHtml(name)} ${badge}</div>
+            <div class="dish-item-meta">${hours} ${hours === 1 ? 'time' : 'timer'}</div>
+            <div class="dish-item-ings">${ings}</div>
+          </div>
+          ${deleteBtn}
+        </div>`;
+    }).join('');
+  }
+
+  async function handleDelete(name) {
+    if (!confirm(`Slette "${name}"?`)) return;
+    try { await removeDish(name); }
+    catch { alert('Serverfeil – kunne ikke slette.'); return; }
+    drawerChanged = true;
+    buildFormIngChips();
+    buildDishList();
+  }
+
+  /* ─── UTILITIES ─── */
+  function showFeedback(el, msg, isError) {
+    el.textContent = msg;
+    el.className = `feedback show ${isError ? 'error' : 'success'}`;
+    setTimeout(() => el.classList.remove('show'), 4000);
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function cssId(str) {
+    return str.replace(/[^a-z0-9]/gi, '_');
+  }
+
+  /* ─── INIT ─── */
+  (async () => {
+    document.getElementById('weekGrid').innerHTML =
+      `<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--muted);font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase">Laster retter…</div>`;
+    try {
+      await loadFood();
+      markBuiltins();
+    } catch {
+      document.getElementById('weekGrid').innerHTML =
+        `<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--terracotta);font-size:0.85rem">Feil: kunne ikke koble til server.<br>Kjør <code>node server.js</code> og last siden på nytt.</div>`;
+      return;
+    }
+    buildUI();
+  })();
+</script>
 </body>
-
 </html>

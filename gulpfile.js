@@ -4,7 +4,6 @@
 const browsersync = require("browser-sync").create();
 const del = require("del");
 const gulp = require("gulp");
-const merge = require("merge-stream");
 
 // BrowserSync
 function browserSync(done) {
@@ -29,18 +28,20 @@ function clean() {
 }
 
 // Bring third party dependencies from node_modules into vendor directory
-function modules() {
-  // Bootstrap
-  var bootstrap = gulp.src('./node_modules/bootstrap/dist/**/*')
+function bootstrapModules() {
+  return gulp.src('./node_modules/bootstrap/dist/**/*')
     .pipe(gulp.dest('./vendor/bootstrap'));
-  // jQuery
-  var jquery = gulp.src([
+}
+
+function jqueryModules() {
+  return gulp.src([
       './node_modules/jquery/dist/*',
       '!./node_modules/jquery/dist/core.js'
     ])
     .pipe(gulp.dest('./vendor/jquery'));
-  return merge(bootstrap, jquery);
 }
+
+const modules = gulp.parallel(bootstrapModules, jqueryModules);
 
 // Watch files
 function watchFiles() {
