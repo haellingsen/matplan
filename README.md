@@ -1,3 +1,39 @@
+# Matplan
+
+Liten Express-app som serverer `index.html` og et lite JSON-API for å lese/skrive `food.json`.
+
+## Kjøre lokalt
+
+```bash
+npm install
+npm start
+# → http://localhost:3000
+```
+
+## Deploy med Docker
+
+Bygg og kjør:
+
+```bash
+mkdir -p data
+cp -n food.json data/food.json   # seed på første deploy
+docker compose up -d --build
+```
+
+Containeren binder seg til `127.0.0.1:3000`. Sett en reverse proxy (nginx/Caddy/Traefik) eller en Cloudflare Tunnel foran for TLS og publisering på `matplan.neferellingsen.eu.org`.
+
+Eksempel `Caddyfile`:
+
+```
+matplan.neferellingsen.eu.org {
+    reverse_proxy 127.0.0.1:3000
+}
+```
+
+`food.json` er bind-mountet fra `./data/food.json`, så endringer overlever container-rebuild.
+
+---
+
 # [Start Bootstrap - Bare](https://startbootstrap.com/template/bare/)
 
 [Bare](https://startbootstrap.com/template/bare/) is a bare HTML starter template for [Bootstrap](https://getbootstrap.com/) created by [Start Bootstrap](https://startbootstrap.com/). This template features predefined file paths for Bootstrap and jQuery, so you can quickly create Bootstrap websites.

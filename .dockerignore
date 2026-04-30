@@ -1,0 +1,11 @@
+node_modules
+.git
+.history
+.gitignore
+.travis.yml
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+LICENSE
+gulpfile.js
