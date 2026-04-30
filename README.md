@@ -10,19 +10,30 @@ npm start
 # → http://localhost:3000
 ```
 
-## Deploy med Docker
+## Deploy med Docker + Cloudflare Tunnel
 
-Bygg og kjør:
+`docker-compose.yml` kjører to tjenester: appen (`matplan`) og en `cloudflared`-sidecar som eksponerer den på `matplan.neferellingsen.eu.org` uten å åpne porter i OCI security list.
 
-```bash
-mkdir -p data
-cp -n food.json data/food.json   # seed på første deploy
-docker compose up -d --build
-```
+1. Opprett en tunnel i Cloudflare Zero Trust → **Networks → Tunnels**, velg "Cloudflared", og kopier tunnel-tokenet.
+2. I tunnelens **Public Hostname**-fane, legg til:
+   - Subdomain: `matplan`, domain: `neferellingsen.eu.org`
+   - Service: `http://matplan:3000` (container-navnet på det interne Compose-nettverket)
+3. På OCI-boksen:
 
-Containeren binder seg til `127.0.0.1:3000`. Sett en reverse proxy (nginx/Caddy/Traefik) eller en Cloudflare Tunnel foran for TLS og publisering på `matplan.neferellingsen.eu.org`.
+   ```bash
+   git clone -b claude/deploy-matplan-hosting-9yNd4 <repo> matplan
+   cd matplan
+   cp .env.example .env          # fyll inn CLOUDFLARE_TUNNEL_TOKEN
+   mkdir -p data
+   cp -n food.json data/food.json   # seed på første deploy
+   docker compose up -d --build
+   ```
 
-Eksempel `Caddyfile`:
+`food.json` er bind-mountet fra `./data/food.json`, så endringer overlever rebuild. Appen er også eksponert lokalt på `127.0.0.1:3000` for debugging.
+
+### Alternativ: reverse proxy i stedet for Tunnel
+
+Drop `cloudflared`-tjenesten og sett en proxy foran i stedet, f.eks. Caddy:
 
 ```
 matplan.neferellingsen.eu.org {
@@ -30,7 +41,7 @@ matplan.neferellingsen.eu.org {
 }
 ```
 
-`food.json` er bind-mountet fra `./data/food.json`, så endringer overlever container-rebuild.
+Da må OCI sin VCN ingress slippe inn 80/443.
 
 ---
 
